@@ -2,7 +2,7 @@
 
 #include "config.h"
 
-void espnow_send_cb(const esp_now_send_info_t *tx_info, esp_now_send_status_t status) {
+/* void espnow_send_cb(const esp_now_send_info_t *tx_info, esp_now_send_status_t status) {
     if (status != ESP_NOW_SEND_SUCCESS) {
         ESP_LOGE("ESPNOW", "error al enviar mensaje");
     }
@@ -78,4 +78,4 @@ void init_espnow() {
     ESP_ERROR_CHECK(esp_now_add_peer(&peer_info));
 
     xTaskCreate(espnow_status_update_task, "espnow_status_update_task", 1024, NULL, 10, NULL);
-}
+} */

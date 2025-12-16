@@ -21,6 +21,8 @@ void hall_task(void* arg) {
 
     for(;;) {
         if (xQueueReceive(hall_event_queue, &level, portMAX_DELAY) == pdTRUE) {
+            char payload[64];
+
             if (level == 1 && system_active) {
                 lap_count++;
                 
@@ -37,16 +39,10 @@ void hall_task(void* arg) {
                         lap_start_time = now;
                         float lap_speed_kph = (target_circumference / 1000.0f) / ((elapsed / 1000.0f) / 3600.0f);
                         
-                        ESP_LOGI("CONTROL", "vta %d, tpo %.2f, vel %.2f", lap_count, elapsed / 1000.0f, lap_speed_kph);
-
-                        espnow_lap_msg_t lap_msg = {
-                            .lap_number = lap_count,
-                            .elapsed_time = elapsed / 1000.0f,
-                            .speed = lap_speed_kph,
-                            .is_final = false
-                        };
-                        esp_err_t result = esp_now_send(gateway_mac, (uint8_t *)&lap_msg, sizeof(lap_msg));
-                        if (result != ESP_OK) ESP_LOGE("ESPNOW", "error al enviar vuelta al gateway");
+                        snprintf(payload, sizeof(payload), "PARCIAL vta %d, tpo %.2f, vel %.2f", lap_count, elapsed / 1000.0f, lap_speed_kph);
+                        sendto(udp_socket, payload, strlen(payload), 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
+                        
+                        ESP_LOGI("PARCIAL", "vta %d, tpo %.2f, vel %.2f", lap_count, elapsed / 1000.0f, lap_speed_kph);
                     } else {
                         lap_count--;
                     }
@@ -58,17 +54,11 @@ void hall_task(void* arg) {
                     float total_time_sec = total_time_ms / 1000.0f;
                     float avg_speed_kph = (target_laps * target_circumference / 1000.0f) / (total_time_sec / 3600.0f);
                     
-                    ESP_LOGI("CONTROL", "final, tpo %.2f, vel %.2f", total_time_sec, avg_speed_kph);
-                    ESP_LOGI("CONTROL", "sistema desactivado");
+                    snprintf(payload, sizeof(payload), "FINAL vta %d, tpo %.2f, vel %.2f", lap_count, total_time_sec, avg_speed_kph);
+                    sendto(udp_socket, payload, strlen(payload), 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
 
-                    espnow_lap_msg_t final_msg = {
-                        .lap_number = lap_count,
-                        .elapsed_time = total_time_sec,
-                        .speed = avg_speed_kph,
-                        .is_final = true
-                    };
-                    esp_err_t result = esp_now_send(gateway_mac, (uint8_t *)&final_msg, sizeof(final_msg));
-                    if (result != ESP_OK) ESP_LOGE("ESPNOW", "error al enviar final al gateway");
+                    ESP_LOGI("FINAL", "vta %d, tpo %.2f, vel %.2f", lap_count, total_time_sec, avg_speed_kph);
+                    ESP_LOGI("FINAL", "sistema desactivado");
 
                     lap_count = -1;
                     total_time_ms = 0;
