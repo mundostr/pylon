@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.16.0)
+set(CMAKE_CXX_STANDARD 17)
+set(SDKCONFIG "${CMAKE_BINARY_DIR}/sdkconfig")
+include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+# idf_build_set_property(MINIMAL_BUILD ON)
+project(f2a_timming_2025_pylon)
