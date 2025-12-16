@@ -73,7 +73,7 @@ void init_espnow() {
 
     esp_now_peer_info_t peer_info = {};
     memcpy(peer_info.peer_addr, gateway_mac, 6);
-    peer_info.channel = 1;
+    peer_info.channel = ESPNOW_CHANNEL;
     peer_info.encrypt = false;
     ESP_ERROR_CHECK(esp_now_add_peer(&peer_info));
 

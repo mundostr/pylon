@@ -19,6 +19,7 @@
 #define VFS_TARGET_LAPS 10
 #define VFS_CIRCUMFERENCE 100.028f // 2 * pi * 15.92
 #define MIN_LAP_TIME_MS 1000
+#define ESPNOW_CHANNEL 1
 #define ESPNOW_STUPDATE_FREQ 3000
 
 int lap_count = -1;
