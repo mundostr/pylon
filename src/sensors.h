@@ -60,7 +60,7 @@ void hall_task(void* arg) {
                     ESP_LOGI("FINAL", "vta %d, tpo %.2f, vel %.2f", lap_count, total_time_sec, avg_speed_kph);
                     ESP_LOGI("FINAL", "sistema desactivado");
 
-                    lap_count = -2;
+                    lap_count = -1 - WAIT_LAPS;
                     total_time_ms = 0;
                     system_active = false;
                 }

@@ -44,7 +44,8 @@ void init_wifi_sta() {
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
-    esp_netif_create_default_wifi_sta();
+    esp_netif_t *sta_netif = esp_netif_create_default_wifi_sta();
+    assert(sta_netif);
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
@@ -66,7 +67,6 @@ void init_wifi_sta() {
     };
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
-    
     ESP_ERROR_CHECK(esp_wifi_start());
     ESP_ERROR_CHECK(esp_wifi_connect());
     
@@ -83,6 +83,21 @@ void init_wifi_sta() {
     }
 
     while (esp_wifi_sta_get_ap_info(&ap_info) != ESP_OK) vTaskDelay(500 / portTICK_PERIOD_MS);
+
+    ESP_ERROR_CHECK(esp_netif_dhcpc_stop(sta_netif));
+    esp_netif_ip_info_t ip_info;
+    inet_pton(AF_INET, PYLON_IP, &ip_info.ip);
+    inet_pton(AF_INET, GATEWAY_IP, &ip_info.gw);
+    inet_pton(AF_INET, NETMASK_IP, &ip_info.netmask);
+    ESP_ERROR_CHECK(esp_netif_set_ip_info(sta_netif, &ip_info));
+}
+
+void udp_send_ack_task(void *pvParameters) {
+    for(;;) {
+        sendto(udp_socket, "ACK", 3, 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
+
+        vTaskDelay(ACK_FREQ / portTICK_PERIOD_MS);
+    }
 }
 
 void udp_receive_task(void *pvParameters) {
@@ -100,7 +115,7 @@ void udp_receive_task(void *pvParameters) {
                 system_active = true;
                 ESP_LOGI("UDP", "crono activado");
             } else if (strcmp(rx_buffer, "des") == 0) {
-                lap_count = -2;
+                lap_count = -1 - WAIT_LAPS;
                 system_active = false;
                 ESP_LOGI("UDP", "crono desactivado");
             } else if (strstr(rx_buffer, "f2a") == rx_buffer) {
