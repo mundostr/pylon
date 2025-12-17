@@ -100,6 +100,7 @@ void udp_receive_task(void *pvParameters) {
                 system_active = true;
                 ESP_LOGI("UDP", "crono activado");
             } else if (strcmp(rx_buffer, "des") == 0) {
+                lap_count = -2;
                 system_active = false;
                 ESP_LOGI("UDP", "crono desactivado");
             } else if (strstr(rx_buffer, "f2a") == rx_buffer) {
