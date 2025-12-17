@@ -1,4 +1,6 @@
 #pragma once
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 
 #include "config.h"
 
@@ -94,7 +96,6 @@ void udp_receive_task(void *pvParameters) {
             // ESP_LOGI("UDP", "comando %s", rx_buffer);
 
             if (strcmp(rx_buffer, "act") == 0) {
-                lap_count = -3;
                 system_active = true;
                 ESP_LOGI("UDP", "crono activado");
             } else if (strcmp(rx_buffer, "des") == 0) {

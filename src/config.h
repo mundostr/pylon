@@ -29,11 +29,11 @@
 #define WIFI_SSID "Ideas 24"
 #define WIFI_PASS "01428375165"
 
-int lap_count = -1;
+int lap_count = -2;
+static int udp_socket = -1;
 bool system_active = false;
 int target_laps = F2A_TARGET_LAPS;
 float target_circumference = F2A_CIRCUMFERENCE;
-static int udp_socket = -1;
 
 wifi_ap_record_t ap_info;
 struct sockaddr_in dest_addr;
