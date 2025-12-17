@@ -1,6 +1,7 @@
 #pragma once
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+// to get rid of annoying msgs about missing inits in some structs
 
 #include "config.h"
 
