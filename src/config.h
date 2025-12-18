@@ -27,10 +27,6 @@
 #define MIN_LAP_TIME_MS 1000
 #define ACK_FREQ 3000
 #define UDP_PORT 3333
-#define PYLON_IP "192.168.0.23"
-#define GATEWAY_IP "192.168.0.1"
-#define NETMASK_IP "255.255.255.0"
-#define LAPTOP_IP "192.168.0.19"
 #define WAIT_LAPS 2
 
 int lap_count = -1 - WAIT_LAPS;
@@ -38,6 +34,7 @@ static int udp_socket = -1;
 bool system_active = false;
 int target_laps = F2A_TARGET_LAPS;
 float target_circumference = F2A_CIRCUMFERENCE;
+char laptop_ip[16] = {0};
 
 wifi_ap_record_t ap_info;
 struct sockaddr_in dest_addr;

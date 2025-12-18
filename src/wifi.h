@@ -34,7 +34,7 @@ void init_filesystem() {
     }
 }
 
-void read_wifi_credentials(char* ssid, char* pass) {
+void read_wifi_credentials(char* ssid, char* pass, char* pylon_ip, char* gateway_ip, char* netmask_ip, char* laptop_ip) {
     FILE* f = fopen("/littlefs/credentials.txt", "r");
     if (f == NULL) {
         ESP_LOGE("LITTLEFS", "error al leer credenciales");
@@ -55,6 +55,14 @@ void read_wifi_credentials(char* ssid, char* pass) {
                 strlcpy(ssid, value, 32); 
             } else if (strcmp(key, "PASS") == 0) {
                 strlcpy(pass, value, 64);
+            } else if (strcmp(key, "PYLON_IP") == 0) {
+                strlcpy(pylon_ip, value, 16);
+            } else if (strcmp(key, "GATEWAY_IP") == 0) {
+                strlcpy(gateway_ip, value, 16);
+            } else if (strcmp(key, "NETMASK_IP") == 0) {
+                strlcpy(netmask_ip, value, 16);
+            } else if (strcmp(key, "LAPTOP_IP") == 0) {
+                strlcpy(laptop_ip, value, 16);
             }
         }
     }
@@ -94,11 +102,22 @@ void init_wifi_sta() {
     ESP_ERROR_CHECK(ret);
 
     init_filesystem();
+    
     char ssid[32] = {0};
     char pass[64] = {0};
-    read_wifi_credentials(ssid, pass);
+    char pylon_ip[16] = {0};
+    char gateway_ip[16] = {0};
+    char netmask_ip[16] = {0};
+    
+    read_wifi_credentials(ssid, pass, pylon_ip, gateway_ip, netmask_ip, laptop_ip);
+    
     ssid[strcspn(ssid, "\r\n")] = 0;
     pass[strcspn(pass, "\r\n")] = 0;
+    pylon_ip[strcspn(pylon_ip, "\r\n")] = 0;
+    gateway_ip[strcspn(gateway_ip, "\r\n")] = 0;
+    netmask_ip[strcspn(netmask_ip, "\r\n")] = 0;
+    laptop_ip[strcspn(laptop_ip, "\r\n")] = 0;
+    
     // printf("SSID: [%s] (length: %d)\n", ssid, (int)strlen(ssid));
     // printf("PASS: [%s] (length: %d)\n", pass, (int)strlen(pass));
 
@@ -147,9 +166,9 @@ void init_wifi_sta() {
 
     ESP_ERROR_CHECK(esp_netif_dhcpc_stop(sta_netif));
     esp_netif_ip_info_t ip_info;
-    inet_pton(AF_INET, PYLON_IP, &ip_info.ip);
-    inet_pton(AF_INET, GATEWAY_IP, &ip_info.gw);
-    inet_pton(AF_INET, NETMASK_IP, &ip_info.netmask);
+    inet_pton(AF_INET, pylon_ip, &ip_info.ip);
+    inet_pton(AF_INET, gateway_ip, &ip_info.gw);
+    inet_pton(AF_INET, netmask_ip, &ip_info.netmask);
     ESP_ERROR_CHECK(esp_netif_set_ip_info(sta_netif, &ip_info));
 }
 
@@ -216,7 +235,7 @@ void init_udp_socket() {
 
     dest_addr.sin_family = AF_INET;
     dest_addr.sin_port = htons(UDP_PORT);
-    dest_addr.sin_addr.s_addr = inet_addr(LAPTOP_IP);
+    dest_addr.sin_addr.s_addr = inet_addr(laptop_ip);
     
     ESP_LOGI("INIT_UDP", "socket creado y bindeado a %d", UDP_PORT);
 }
