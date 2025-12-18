@@ -10,6 +10,7 @@
 #include <esp_wifi.h>
 #include <esp_event.h>
 #include <esp_timer.h>
+#include <esp_littlefs.h>
 #include <string.h>
 #include <lwip/sockets.h>
 #include <lwip/err.h>
@@ -26,8 +27,6 @@
 #define MIN_LAP_TIME_MS 1000
 #define ACK_FREQ 3000
 #define UDP_PORT 3333
-#define WIFI_SSID "Ideas 24"
-#define WIFI_PASS "01428375165"
 #define PYLON_IP "192.168.0.23"
 #define GATEWAY_IP "192.168.0.1"
 #define NETMASK_IP "255.255.255.0"
