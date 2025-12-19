@@ -34,7 +34,7 @@ void init_filesystem() {
     ESP_LOGI("LITTLEFS", "inicializado");
 }
 
-void read_wifi_credentials(char* ssid, char* pass, char* pylon_ip, char* gateway_ip, char* netmask_ip, char* laptop_ip) {
+void read_wifi_credentials(char* ssid, char* pass, char* pylon_ip, char* gateway_ip, char* netmask_ip, char* laptop_ip, char* laptop_port) {
     FILE* f = fopen("/littlefs/credentials.txt", "r");
     if (f == NULL) {
         ESP_LOGE("LITTLEFS", "error al leer credenciales");
@@ -64,6 +64,8 @@ void read_wifi_credentials(char* ssid, char* pass, char* pylon_ip, char* gateway
                 strlcpy(netmask_ip, value, 16);
             } else if (strcmp(key, "LAPTOP_IP") == 0) {
                 strlcpy(laptop_ip, value, 16);
+            } else if (strcmp(key, "LAPTOP_PORT") == 0) {
+                strlcpy(laptop_port, value, 16);
             }
         }
     }
@@ -109,9 +111,9 @@ void init_wifi_sta() {
     char pylon_ip[16] = {0};
     char gateway_ip[16] = {0};
     char netmask_ip[16] = {0};
-    // laptop_ip is kept global
+    // laptop_ip and laptop_port are kept global
     
-    read_wifi_credentials(ssid, pass, pylon_ip, gateway_ip, netmask_ip, laptop_ip);
+    read_wifi_credentials(ssid, pass, pylon_ip, gateway_ip, netmask_ip, laptop_ip, laptop_port);
     
     ssid[strcspn(ssid, "\r\n")] = 0;
     pass[strcspn(pass, "\r\n")] = 0;
@@ -217,6 +219,7 @@ void udp_receive_task(void *pvParameters) {
 }
 
 void init_udp_socket() {
+    int udp_port = atoi(laptop_port);
     udp_socket = socket(AF_INET, SOCK_DGRAM, 0);
     
     if (udp_socket < 0) {
@@ -226,7 +229,7 @@ void init_udp_socket() {
 
     struct sockaddr_in bind_addr = {
         .sin_family = AF_INET,
-        .sin_port = htons(UDP_PORT),
+        .sin_port = htons(udp_port),
         .sin_addr = {.s_addr = INADDR_ANY,}
     };
 
@@ -237,8 +240,8 @@ void init_udp_socket() {
     }
 
     dest_addr.sin_family = AF_INET;
-    dest_addr.sin_port = htons(UDP_PORT);
+    dest_addr.sin_port = htons(udp_port);
     dest_addr.sin_addr.s_addr = inet_addr(laptop_ip);
     
-    ESP_LOGI("INIT_UDP", "socket creado y bindeado a %d", UDP_PORT);
+    ESP_LOGI("INIT_UDP", "socket creado y bindeado a %i", udp_port);
 }
