@@ -11,8 +11,6 @@ static EventGroupHandle_t wifi_event_group;
 #define WIFI_FAIL_BIT BIT1
 
 void init_filesystem() {
-    ESP_LOGI("LITTLEFS", "inicializando");
-
     esp_vfs_littlefs_conf_t conf = {
         .base_path = "/littlefs",
         .partition_label = "storage",
@@ -32,19 +30,22 @@ void init_filesystem() {
 
         return;
     }
+
+    ESP_LOGI("LITTLEFS", "inicializado");
 }
 
 void read_wifi_credentials(char* ssid, char* pass, char* pylon_ip, char* gateway_ip, char* netmask_ip, char* laptop_ip) {
     FILE* f = fopen("/littlefs/credentials.txt", "r");
     if (f == NULL) {
         ESP_LOGE("LITTLEFS", "error al leer credenciales");
+        
         return;
     }
 
     char line[128];
     while (fgets(line, sizeof(line), f)) {
         line[strcspn(line, "\r\n")] = 0;
-        char *delimiter = strchr(line, '='); // Find the '=' character
+        char *delimiter = strchr(line, '=');
         
         if (delimiter != NULL) {
             char *key = line;
@@ -73,10 +74,10 @@ void read_wifi_credentials(char* ssid, char* pass, char* pylon_ip, char* gateway
 static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
     if (event_base == WIFI_EVENT) {
         if (event_id == WIFI_EVENT_STA_START) {
-            ESP_LOGI("WIFI", "Inicio STA, conectando...");
+            ESP_LOGI("WIFI", "conectando modo STA...");
             esp_wifi_connect();
         } else if (event_id == WIFI_EVENT_STA_DISCONNECTED) {
-            ESP_LOGW("WIFI", "STA desconectado, reintentando...");
+            ESP_LOGW("WIFI", "desconectado, reintentando...");
             esp_wifi_connect();
             xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_BIT);
         }
@@ -108,6 +109,7 @@ void init_wifi_sta() {
     char pylon_ip[16] = {0};
     char gateway_ip[16] = {0};
     char netmask_ip[16] = {0};
+    // laptop_ip is kept global
     
     read_wifi_credentials(ssid, pass, pylon_ip, gateway_ip, netmask_ip, laptop_ip);
     
@@ -145,12 +147,13 @@ void init_wifi_sta() {
     };
     strlcpy((char *)wifi_config.sta.ssid, ssid, sizeof(wifi_config.sta.ssid));
     strlcpy((char *)wifi_config.sta.password, pass, sizeof(wifi_config.sta.password));
+    
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
     ESP_ERROR_CHECK(esp_wifi_connect());
     
-    ESP_LOGI("WIFI", "inicializacion STA finalizada");
+    ESP_LOGI("WIFI", "inicializado modo STA");
 
     EventBits_t bits = xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT | WIFI_FAIL_BIT, pdFALSE, pdFALSE, portMAX_DELAY);
 
@@ -188,7 +191,7 @@ void udp_receive_task(void *pvParameters) {
     for(;;) {
         int len = recvfrom(udp_socket, rx_buffer, sizeof(rx_buffer) - 1, 0, (struct sockaddr *)&source_addr, &socklen);
         if (len > 0) {
-            rx_buffer[len] = '\0'; // Null-terminate
+            rx_buffer[len] = '\0';
             // ESP_LOGI("UDP", "comando %s", rx_buffer);
 
             if (strcmp(rx_buffer, "act") == 0) {
