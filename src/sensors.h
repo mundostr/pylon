@@ -2,6 +2,24 @@
 
 #include "config.h"
 
+TimerHandle_t inactivity_timer = NULL;
+
+void init_inactivity_timer() {
+    inactivity_timer = xTimerCreate(
+        "inactivityTimer",
+        pdMS_TO_TICKS(DEEPSLEEP_TIME_MS),
+        pdFALSE,
+        NULL,
+        [](TimerHandle_t xTimer) {
+            ESP_LOGI("SLEEP", "Entrando modo deepsleep");
+            gpio_isr_handler_remove((gpio_num_t)HALL_SENSOR_GPIO);
+            esp_deep_sleep_start();
+        }
+    );
+    
+    xTimerStart(inactivity_timer, 0);
+}
+
 static void IRAM_ATTR hall_isr_handler(void* arg) {
     static uint32_t last_isr_time = 0;
     uint32_t now = esp_timer_get_time() / 1000;
@@ -11,6 +29,8 @@ static void IRAM_ATTR hall_isr_handler(void* arg) {
 
     int level = gpio_get_level((gpio_num_t)HALL_SENSOR_GPIO);
     xQueueSendFromISR(hall_event_queue, &level, NULL);
+    
+    if (inactivity_timer != NULL) xTimerReset(inactivity_timer, 0);
 }
 
 void hall_task(void* arg) {
@@ -23,6 +43,7 @@ void hall_task(void* arg) {
         if (xQueueReceive(hall_event_queue, &level, portMAX_DELAY) == pdTRUE) {
             char payload[64];
 
+            if (level == 1) ESP_LOGI("HALL", "tutor detectado");
             if (level == 1 && system_active) {
                 lap_count++;
                 
@@ -82,6 +103,11 @@ void init_hall() {
     hall_event_queue = xQueueCreate(10, sizeof(int));
     gpio_install_isr_service(0);
     gpio_isr_handler_add((gpio_num_t)HALL_SENSOR_GPIO, hall_isr_handler, NULL);
+
+    esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
+    esp_sleep_enable_ext0_wakeup((gpio_num_t)HALL_SENSOR_GPIO, 1);
     
     xTaskCreate(hall_task, "hall_task", 4096, NULL, 10, NULL);
+    
+    ESP_LOGI("HALL", "Sensor configurado");
 }

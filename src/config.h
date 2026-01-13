@@ -11,12 +11,13 @@
 #include <esp_event.h>
 #include <esp_timer.h>
 #include <esp_littlefs.h>
+#include <esp_sleep.h>
 #include <string.h>
 #include <lwip/sockets.h>
 #include <lwip/err.h>
 #include <lwip/sys.h>
 
-#define HALL_SENSOR_GPIO 23
+#define HALL_SENSOR_GPIO 12
 
 #define START_DELAY 1000
 #define ISR_DEBOUNCE_MS 10
@@ -25,6 +26,7 @@
 #define VFS_TARGET_LAPS 10
 #define VFS_CIRCUMFERENCE 100.028f // 2 * pi * 15.92
 #define MIN_LAP_TIME_MS 1000
+#define DEEPSLEEP_TIME_MS 600000
 #define ACK_FREQ 3000
 #define WAIT_LAPS 2
 
@@ -39,3 +41,4 @@ char laptop_port[16] = {0};
 wifi_ap_record_t ap_info;
 struct sockaddr_in dest_addr;
 QueueHandle_t hall_event_queue;
+extern TimerHandle_t inactivity_timer;
