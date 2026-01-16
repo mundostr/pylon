@@ -21,6 +21,19 @@
 - Ability to communicate via wifi UDP to an app for reporting.
 - Ability to modify laps limits between 9 for F2A FAI Speed, or 10 for VFS (Speed Southamerican Formula).
 
+### Installation:
+- The system is designed as a PlatformIO project. You need to create a data folder and a credentials.txt file inside, with this format:
+
+```
+SSID=wifi_ssid
+PASS=wifi_pass
+PYLON_IP=fixed_ip_for_this_device
+GATEWAY_IP=gateway_ip
+NETMASK_IP=gateway_netmask
+LAPTOP_IP=laptop_ip (where app is running)
+LAPTOP_PORT=laptop_port (ie 3333)
+```
+
 ### Operation:
 - The system connects to a WiFi AP and establishes an UDP socket.
 - When it receives an ACT message from a laptop app via socket, it starts to count laps up, taking into consideration the rules specs (2 complete laps must elapse until start timming). From that moment counts up to 9 or 10 (depending on the current active class F2A or VFS).
