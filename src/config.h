@@ -1,3 +1,5 @@
+// Alternative code with ESPNOW gateway usage
+
 #pragma once
 
 #include <freertos/FreeRTOS.h>
